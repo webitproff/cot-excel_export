@@ -1,104 +1,173 @@
 <?php
-/* ====================
-[BEGIN_COT_EXT]
-Hooks=tools
-[END_COT_EXT]
-==================== */
-
 defined('COT_CODE') or die('Wrong URL');
 
-require_once cot_incfile('excel_export', 'plug');
-require_once cot_langfile('excel_export', 'plug');
+/**
+ * Functions for exporting data to Excel in Cotonti using PhpSpreadsheet
+ */
 
-if (!cot_auth('plug', 'excel_export', 'A')) { 
-    cot_die_message(403);
-}
-$adminTitle = $L['excel_export_title'];
+$pluginDir = $cfg['plugins_dir'] . '/excel_export';
+$libPathPhpSpreadsheet = "$pluginDir/lib/phpspreadsheet/src/PhpOffice/PhpSpreadsheet";
+$libPathPsr = "$pluginDir/lib/psr/simple-cache/src/Psr/SimpleCache";
+$libPathZipStream = "$pluginDir/lib/zipstream/src";
+$libPathPhpEnum = "$pluginDir/lib/php-enum/src";
+$logFile = "$pluginDir/logs/export.log";
 
-$t = new XTemplate(cot_tplfile('excel_export.tools', 'plug', true));
-
-$a = cot_import('a', 'G', 'TXT');
-
-// Get all fields from cot_pages dynamically
-$exportFields = [];
-$table = $db->pages ?? 'cot_pages';
-if (!empty($table)) {
-    $columns = $db->query("SHOW COLUMNS FROM $table")->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($columns as $column) {
-        $fieldName = $column['Field'];
-        $exportFields[$fieldName] = strtoupper($fieldName);
-    }
-}
-
-// Сессии для сохранения данных формы
-session_start();
-
-// Обработка AJAX-запроса на экспорт
-if ($a === 'export' && !empty($_POST['fields'])) {
-    $selectedFields = [];
-    foreach ((array) $_POST['fields'] as $field => $enabled) {
-        if ($enabled) {
-            $customName = isset($_POST['field_names'][$field]) ? $_POST['field_names'][$field] : '';
-            $selectedFields[$field] = $customName !== '' ? $customName : strtoupper($field);
+// Autoloader for PhpSpreadsheet
+spl_autoload_register(function (string $class) use ($libPathPhpSpreadsheet): void {
+    if (str_starts_with($class, 'PhpOffice\\PhpSpreadsheet\\')) {
+        $relativePath = substr($class, strlen('PhpOffice\\PhpSpreadsheet\\'));
+        $file = $libPathPhpSpreadsheet . '/' . str_replace('\\', '/', $relativePath) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+        } else {
+            cot_excel_export_log("Файл не найден: $file");
+            die("Класс $class не найден. Ожидаемый файл: $file");
         }
     }
+});
 
-    cot_excel_export_log("Полученные имена полей из формы: " . json_encode($_POST['field_names']));
-    cot_excel_export_log("Выбранные поля с кастомными названиями: " . json_encode($selectedFields));
-
-    $filePath = cot_excel_export_process($selectedFields);
-
-    if (strpos($filePath, 'Ошибка') === false && file_exists($filePath)) {
-        $_SESSION['excel_export_field_names'] = $_POST['field_names'];
-        $_SESSION['excel_export_fields'] = $_POST['fields'];
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'file_url' => $cfg['mainurl'] . '/plugins/excel_export/uploads/' . basename($filePath)]);
-    } else {
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'error' => $filePath]);
+// Autoloader for Psr\SimpleCache
+spl_autoload_register(function (string $class) use ($libPathPsr): void {
+    if (str_starts_with($class, 'Psr\\SimpleCache\\')) {
+        $relativePath = substr($class, strlen('Psr\\SimpleCache\\'));
+        $file = $libPathPsr . '/' . str_replace('\\', '/', $relativePath) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+        }
     }
-    exit;
-}
+});
 
-// Загрузка данных из сессии
-$fieldNames = isset($_SESSION['excel_export_field_names']) ? $_SESSION['excel_export_field_names'] : [];
-$selectedCheckboxes = isset($_SESSION['excel_export_fields']) ? $_SESSION['excel_export_fields'] : [];
-
-// Render field selection form
-foreach ($exportFields as $field => $label) {
-    $defaultValue = isset($fieldNames[$field]) ? $fieldNames[$field] : '';
-    $checked = isset($selectedCheckboxes[$field]) && $selectedCheckboxes[$field];
-    $t->assign([
-        'FIELD_NAME' => $field,
-        'FIELD_LABEL' => $label,
-        'FIELD_CHECKBOX' => cot_checkbox($checked, "fields[$field]", '', ['value' => 1]),
-        'FIELD_NAME_INPUT' => cot_inputbox('text', "field_names[$field]", $defaultValue, ['size' => 30, 'placeholder' => strtoupper($field)])
-    ]);
-    $t->parse('MAIN.FIELDS');
-}
-
-// List of exported files
-$uploadDir = $cfg['plugins_dir'] . '/excel_export/uploads/';
-if (is_dir($uploadDir)) {
-    $files = glob($uploadDir . '*.xlsx');
-    foreach ($files as $file) {
-        $fileName = basename($file);
-        $fileUrl = $cfg['mainurl'] . '/plugins/excel_export/uploads/' . $fileName;
-        $t->assign([
-            'EXPORTED_FILE_NAME' => $fileName,
-            'EXPORTED_FILE_URL' => $fileUrl,
-            'EXPORTED_FILE_SIZE' => cot_build_filesize(filesize($file)),
-            'EXPORTED_FILE_DATE' => date('Y-m-d H:i:s', filemtime($file))
-        ]);
-        $t->parse('MAIN.EXPORTED_FILES');
+// Autoloader for ZipStream
+spl_autoload_register(function (string $class) use ($libPathZipStream): void {
+    if (str_starts_with($class, 'ZipStream\\')) {
+        $relativePath = substr($class, strlen('ZipStream\\'));
+        $file = $libPathZipStream . '/' . str_replace('\\', '/', $relativePath) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+        } else {
+            cot_excel_export_log("Файл ZipStream не найден: $file");
+        }
     }
+});
+
+// Autoloader for MyCLabs\Enum
+spl_autoload_register(function (string $class) use ($libPathPhpEnum): void {
+    if (str_starts_with($class, 'MyCLabs\\Enum\\')) {
+        $relativePath = substr($class, strlen('MyCLabs\\Enum\\'));
+        $file = $libPathPhpEnum . '/' . str_replace('\\', '/', $relativePath) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+        } else {
+            cot_excel_export_log("Файл PhpEnum не найден: $file");
+        }
+    }
+});
+
+require_once "$libPathPhpSpreadsheet/Spreadsheet.php";
+require_once "$libPathPhpSpreadsheet/IOFactory.php";
+
+/**
+ * Логирование
+ */
+function cot_excel_export_log(string $message): void
+{
+    global $logFile;
+    $timestamp = date('Y-m-d H:i:s');
+    file_put_contents($logFile, "[$timestamp] $message\n", FILE_APPEND);
 }
 
-$t->assign([
-    'EXPORT_FORM_ACTION' => cot_url('admin', ['m' => 'other', 'p' => 'excel_export'], '', true), // Self URL
-    'EXPORT_MAX_ROWS' => $cfg['plugin']['excel_export']['max_rows']
-]);
+/**
+ * Экспорт данных в Excel (.xlsx) и возврат пути к файлу
+ */
+function cot_excel_export_process(array $selectedFields): string
+{
+    global $db, $cfg;
 
-cot_display_messages($t);
-$t->parse('MAIN');
-$pluginBody = $t->text('MAIN');
+    cot_excel_export_log("Начало процесса экспорта");
+
+    $pluginDir = $cfg['plugins_dir'] . '/excel_export';
+    $expectedTable = $db->pages ?: 'cot_pages';
+    $targetTable = $cfg['plugin']['excel_export']['export_table'] ?? $expectedTable;
+    $maxRows = (int) ($cfg['plugin']['excel_export']['max_rows'] ?? 100);
+
+    cot_excel_export_log("Целевая таблица: '$targetTable', Ожидаемая таблица: '$expectedTable'");
+
+    if ($targetTable !== 'pages' && $targetTable !== $expectedTable) {
+        cot_excel_export_log("Ошибка: Экспорт поддерживает только таблицу '$expectedTable', указана: '$targetTable'");
+        return "Ошибка: Экспорт поддерживает только таблицу '$expectedTable'.";
+    }
+
+    $table = $expectedTable;
+
+    if (empty($table)) {
+        cot_excel_export_log("Ошибка: Таблица '$targetTable' не определена.");
+        return "Ошибка: Таблица 'pages' не определена.";
+    }
+
+    if (empty($selectedFields)) {
+        cot_excel_export_log("Ошибка: Не выбраны поля для экспорта.");
+        return "Ошибка: Не выбраны поля.";
+    }
+    $dbFields = array_keys($selectedFields);
+    $excelHeaders = array_values($selectedFields);
+    cot_excel_export_log("Выбранные поля: " . implode(', ', $dbFields));
+
+    $query = "SELECT " . implode(',', $dbFields) . " FROM $table";
+    if ($maxRows > 0) {
+        $query .= " LIMIT $maxRows";
+    }
+    cot_excel_export_log("Выполняется запрос: $query");
+    try {
+        $result = $db->query($query)->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        cot_excel_export_log("Ошибка базы данных: " . $e->getMessage());
+        return "Ошибка: Запрос к базе данных не выполнен - " . $e->getMessage();
+    }
+
+    if (empty($result)) {
+        cot_excel_export_log("Данные в таблице '$table' для выбранных полей не найдены.");
+        return "Нет данных для экспорта.";
+    }
+    cot_excel_export_log("Получено строк: " . count($result));
+
+    cot_excel_export_log("Создание новой таблицы");
+    try {
+        $spreadsheet = new PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+    } catch (Exception $e) {
+        cot_excel_export_log("Ошибка создания таблицы: " . $e->getMessage());
+        return "Ошибка: Не удалось создать таблицу - " . $e->getMessage();
+    }
+
+    cot_excel_export_log("Установка заголовков");
+    $col = 'A';
+    foreach ($excelHeaders as $header) {
+        $sheet->setCellValue($col . '1', $header);
+        $col++;
+    }
+
+    cot_excel_export_log("Заполнение данными");
+    $rowNum = 2;
+    foreach ($result as $row) {
+        $col = 'A';
+        foreach ($dbFields as $field) {
+            $sheet->setCellValue($col . $rowNum, $row[$field]);
+            $col++;
+        }
+        $rowNum++;
+    }
+
+    $fileName = "export_" . date('Y-m-d_H-i-s') . ".xlsx";
+    $filePath = $pluginDir . '/uploads/' . $fileName;
+    cot_excel_export_log("Генерация файла XLSX: $filePath");
+    try {
+        $writer = new PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($filePath);
+    } catch (Exception $e) {
+        cot_excel_export_log("Ошибка записи файла: " . $e->getMessage());
+        return "Ошибка: Не удалось сгенерировать XLSX - " . $e->getMessage();
+    }
+
+    cot_excel_export_log("Файл успешно сгенерирован: $filePath");
+    return $filePath;
+}
