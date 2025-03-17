@@ -145,4 +145,5 @@
 
 <h3><a href="https://abuyfile.com/ru/forums/cotonti/custom/plugs/topic124"><strong>Тема поддержки, инструкции и скриншоты плагина на форуме</strong></a></h3>
 
-
+<hr />
+<p>Если вас интересует плагин импорта данных из Excel через PhpSpreadsheet - <a href="https://abuyfile.com/ru/forums/cotonti/custom/plugs/topic123"><strong>смотреть на странице плагина</strong></a></p>
