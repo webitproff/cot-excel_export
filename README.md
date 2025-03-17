@@ -1,7 +1,8 @@
 # Export to Excel via PhpSpreadsheet for Cotonti CMF
 
 ## Описание
- Cotonti. Экспорт статей в Excel из БД в Cotonti через PhpSpreadsheet
+
+### Экспорт статей в Excel из БД в Cotonti через PhpSpreadsheet 
 
 **Название**: Export to Excel via PhpSpreadsheet  
 **Версия**: 1.0.0  
