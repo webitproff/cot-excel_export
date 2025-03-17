@@ -4,8 +4,8 @@
 Code=excel_export
 Name=Export to Excel via PhpSpreadsheet
 Description=Tool for exporting data from Cotonti tables to Excel
-Version=1.0.0
-Date=2025-03-16
+Version=1.0.1
+Date=2025-03-17
 Author=cot_webitproff
 Copyright=(c) 2025 cot_webitproff
 Notes=Uses PhpSpreadsheet 1.23.0 without Composer. Tested on Cotonti 0.9.26 with PHP 8.2
