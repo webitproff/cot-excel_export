@@ -10,7 +10,7 @@ defined('COT_CODE') or die('Wrong URL');
 require_once cot_incfile('excel_export', 'plug');
 require_once cot_langfile('excel_export', 'plug');
 
-if (!cot_auth('plug', 'excel_export', 'W')) {
+if (!cot_auth('plug', 'excel_export', 'A')) {
     cot_die_message(403);
 }
 $adminTitle = $L['excel_export_title'];
@@ -30,36 +30,49 @@ if (!empty($table)) {
     }
 }
 
+// Сессии для сохранения данных формы
+session_start();
+
+// Обработка AJAX-запроса на экспорт
 if ($a === 'export' && !empty($_POST['fields'])) {
     $selectedFields = [];
     foreach ((array) $_POST['fields'] as $field => $enabled) {
         if ($enabled) {
-            $customName = cot_import("field_names[$field]", 'P', 'TXT', 100);
-            $selectedFields[$field] = $customName ?: strtoupper($field);
+            $customName = isset($_POST['field_names'][$field]) ? $_POST['field_names'][$field] : '';
+            $selectedFields[$field] = $customName !== '' ? $customName : strtoupper($field);
         }
     }
 
+    cot_excel_export_log("Полученные имена полей из формы: " . json_encode($_POST['field_names']));
+    cot_excel_export_log("Выбранные поля с кастомными названиями: " . json_encode($selectedFields));
+
     $filePath = cot_excel_export_process($selectedFields);
 
-    if (strpos($filePath, 'Error') === false && file_exists($filePath)) {
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename="' . basename($filePath) . '"');
-        header('Content-Length: ' . filesize($filePath));
-        readfile($filePath);
-        // Не удаляем файл: unlink($filePath); убрано
-        exit;
+    if (strpos($filePath, 'Ошибка') === false && file_exists($filePath)) {
+        $_SESSION['excel_export_field_names'] = $_POST['field_names'];
+        $_SESSION['excel_export_fields'] = $_POST['fields'];
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'file_url' => $cfg['mainurl'] . '/plugins/excel_export/uploads/' . basename($filePath)]);
     } else {
-        cot_message($filePath);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => $filePath]);
     }
+    exit;
 }
+
+// Загрузка данных из сессии
+$fieldNames = isset($_SESSION['excel_export_field_names']) ? $_SESSION['excel_export_field_names'] : [];
+$selectedCheckboxes = isset($_SESSION['excel_export_fields']) ? $_SESSION['excel_export_fields'] : [];
 
 // Render field selection form
 foreach ($exportFields as $field => $label) {
+    $defaultValue = isset($fieldNames[$field]) ? $fieldNames[$field] : '';
+    $checked = isset($selectedCheckboxes[$field]) && $selectedCheckboxes[$field];
     $t->assign([
         'FIELD_NAME' => $field,
         'FIELD_LABEL' => $label,
-        'FIELD_CHECKBOX' => cot_checkbox(false, "fields[$field]", '', ['value' => 1]),
-        'FIELD_NAME_INPUT' => cot_inputbox('text', "field_names[$field]", '', ['size' => 30, 'placeholder' => strtoupper($field)])
+        'FIELD_CHECKBOX' => cot_checkbox($checked, "fields[$field]", '', ['value' => 1]),
+        'FIELD_NAME_INPUT' => cot_inputbox('text', "field_names[$field]", $defaultValue, ['size' => 30, 'placeholder' => strtoupper($field)])
     ]);
     $t->parse('MAIN.FIELDS');
 }
@@ -82,7 +95,7 @@ if (is_dir($uploadDir)) {
 }
 
 $t->assign([
-    'EXPORT_FORM_ACTION' => cot_url('admin', ['m' => 'other', 'p' => 'excel_export', 'a' => 'export'], '', true),
+    'EXPORT_FORM_ACTION' => cot_url('admin', ['m' => 'other', 'p' => 'excel_export'], '', true), // Self URL
     'EXPORT_MAX_ROWS' => $cfg['plugin']['excel_export']['max_rows']
 ]);
 
