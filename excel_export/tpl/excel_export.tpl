@@ -6,7 +6,7 @@
     <div class="alert alert-info messages">{PHP.out.messages}</div>
     <!-- ENDIF -->
 
-    <!-- это не удаляй --> {FILE "{PHP.cfg.system_dir}/admin/tpl/warnings.tpl"}
+    {FILE "{PHP.cfg.system_dir}/admin/tpl/warnings.tpl"}
 
     <h3 class="mt-4 mb-3">{PHP.L.excel_export_previous_exports}</h3>
     <!-- BEGIN: EXPORTED_FILES -->
