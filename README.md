@@ -139,8 +139,10 @@
 [2025-03-16 13:XX:XX] File generated successfully: /home/var/public_html/plugins/excel_export/uploads/export_2025-03-16_13-XX-XX.xlsx
 ```
 
-Тема поддержки
+Скачать бесплатно плагин экспорта данных в Excel (.xlsx) (использует библиотеку&nbsp;PhpSpreadsheet)
 
+<h3><a href="https://github.com/webitproff/cot-excel_export"><strong>Публичный репозиторий на GitHub с открытым исходным кодом.</strong></a></h3>
 
+<h3><a href="https://abuyfile.com/ru/forums/cotonti/custom/plugs/topic124"><strong>Тема поддержки, инструкции и скриншоты плагина на форуме</strong></a></h3>
 
 
