@@ -150,3 +150,34 @@
 
 <hr />
 <p>Если вас интересует плагин импорта данных из Excel через PhpSpreadsheet - <a href="https://abuyfile.com/ru/forums/cotonti/custom/plugs/topic123"><strong>смотреть на странице плагина</strong></a></p>
+
+
+<hr />
+
+# RU
+История изменений 17.03.2025. версия 1.0.1
+
+1. Пофиксил сохранение пользователських названий колонок таблицы для создаваемого при экспорте файла Excel.
+
+2. Теперь название полей можно писать на кириллице, на латинском+кириллица.
+Например:
+ID | ALIAS | Статус | Категория | PAGE_TITLE | TEXT-DESC | PAGE_PARSER | PAGE_OWNERID | PAGE_DATE | Дата обновления | Просмотры
+
+Это позволяет легко и гибко подходить к экспорту, если файл Excel используется для импорта товаров в торговые площадки или интернет магазины, для людей, которые не знакомы с полями таблицы БД в Cotonti.
+
+3. Расширено логирование на русском языке.
+
+# English
+
+Changelog 1.0.1 (March 17, 2025)
+Revision history 03/17/2025. version 1.0.1
+
+1. Fixed saving of custom column names of the table for the Excel file created during export.
+
+2. Now the names of the fields can be written in Cyrillic, Latin + Cyrillic.
+For example:
+ID | ALIAS | Status | Category | PAGE_TITLE | TEXT-DESC | PAGE_PARSER | PAGE_OWNER ID | PAGE_DATE | Update date | Views
+
+This allows for an easy and flexible approach to exporting if an Excel file is used to import products to marketplaces or online stores, for people who are not familiar with the fields of the Cotonti database table.
+
+3. Advanced logging in Russian.
