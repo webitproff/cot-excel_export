@@ -4,7 +4,19 @@
 Hooks=tools
 [END_COT_EXT]
 ==================== */
-
+/**
+ * Tool for exporting data from any table database Cotonti CMF to Excel
+ * Plugin excel_export for Cotonti 0.9.26, PHP 8.4+
+ * Filename: excel_export.tools.php
+ * Purpose: Administration for the Plugin excel_export
+ * Date: Feb 02Th, 2026
+ * @package excel_export
+ * @version 2.0.1
+ * @author webitproff
+ * @copyright Copyright (c) webitproff 2026 | https://github.com/webitproff
+ * @license BSD
+ */
+ 
 defined('COT_CODE') or die('Wrong URL');
 
 require_once cot_incfile('excel_export', 'plug');
@@ -19,9 +31,11 @@ $t = new XTemplate(cot_tplfile('excel_export.tools', 'plug', true));
 
 $a = cot_import('a', 'G', 'TXT');
 
-// Get all fields from cot_pages dynamically
+// Get all fields from table dynamically
 $exportFields = [];
-$table = $db->pages ?? 'cot_pages';
+	$settedTable = $cfg['plugin']['excel_export']['export_table'] ?? '';
+	$expectedTable = $db_x . $settedTable;
+$table = $expectedTable;
 if (!empty($table)) {
     $columns = $db->query("SHOW COLUMNS FROM $table")->fetchAll(PDO::FETCH_ASSOC);
     foreach ($columns as $column) {
