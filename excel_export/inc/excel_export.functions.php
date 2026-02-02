@@ -1,9 +1,18 @@
 <?php
+/**
+ * Tool for exporting data from any table database Cotonti CMF to Excel
+ * Plugin excel_export for Cotonti 0.9.26, PHP 8.4+
+ * Filename: excel_export.functions.php
+ * Purpose: Functions for exporting data to Excel in Cotonti using PhpSpreadsheet for the Plugin excel_export
+ * Date: Feb 02Th, 2026
+ * @package excel_export
+ * @version 2.0.1
+ * @author webitproff
+ * @copyright Copyright (c) webitproff 2026 | https://github.com/webitproff
+ * @license BSD
+ */
 defined('COT_CODE') or die('Wrong URL');
 
-/**
- * Functions for exporting data to Excel in Cotonti using PhpSpreadsheet
- */
 
 $pluginDir = $cfg['plugins_dir'] . '/excel_export';
 $libPathPhpSpreadsheet = "$pluginDir/lib/phpspreadsheet/src/PhpOffice/PhpSpreadsheet";
@@ -81,18 +90,18 @@ function cot_excel_export_log(string $message): void
  */
 function cot_excel_export_process(array $selectedFields): string
 {
-    global $db, $cfg;
+    global $db, $db_x, $cfg;
 
     cot_excel_export_log("Начало процесса экспорта");
-
+	$settedTable = $cfg['plugin']['excel_export']['export_table'] ?? '';
+	$expectedTable = $db_x . $settedTable;
     $pluginDir = $cfg['plugins_dir'] . '/excel_export';
-    $expectedTable = $db->pages ?: 'cot_pages';
     $targetTable = $cfg['plugin']['excel_export']['export_table'] ?? $expectedTable;
     $maxRows = (int) ($cfg['plugin']['excel_export']['max_rows'] ?? 100);
 
     cot_excel_export_log("Целевая таблица: '$targetTable', Ожидаемая таблица: '$expectedTable'");
 
-    if ($targetTable !== 'pages' && $targetTable !== $expectedTable) {
+    if ($targetTable !== $settedTable && $targetTable !== $expectedTable) {
         cot_excel_export_log("Ошибка: Экспорт поддерживает только таблицу '$expectedTable', указана: '$targetTable'");
         return "Ошибка: Экспорт поддерживает только таблицу '$expectedTable'.";
     }
