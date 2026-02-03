@@ -14,6 +14,9 @@ The plugin uses the PhpSpreadsheet library to generate Excel files and works **w
 [![Bootstrap v5.3.8](https://img.shields.io/badge/Bootstrap-v5.3.8-blueviolet.svg)](https://getbootstrap.com/)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg)](https://github.com/webitproff/cot-excel_export/blob/main/LICENSE)
 
+
+![excel-export-cotonti-webitproff-main](https://github.com/user-attachments/assets/f2d227d7-5376-4e4b-ad47-985c84cf30de)
+
 ## Important to read
 
 1. To obtain exact table names when you do not currently have direct access to the database, you can use a similar tool called **"DB Structure Viewer"** for Cotonti CMF.  
