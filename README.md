@@ -7,6 +7,13 @@ After export, the file is automatically downloaded to the user's computer and al
 The plugin page displays a list of previously created export files with the ability to download them again.
 The plugin uses the PhpSpreadsheet library to generate Excel files and works **without Composer**.
 
+[![Version](https://img.shields.io/badge/version-2.0.1-green.svg)](https://github.com/webitproff/cot-excel_export/releases)
+[![Cotonti Compatibility](https://img.shields.io/badge/Cotonti_Siena-0.9.26-orange.svg)](https://github.com/Cotonti/Cotonti)
+[![PHP](https://img.shields.io/badge/PHP-8.4-purple.svg)](https://www.php.net/releases/8_4_0.php)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
+[![Bootstrap v5.3.8](https://img.shields.io/badge/Bootstrap-v5.3.8-blueviolet.svg)](https://getbootstrap.com/)
+[![License](https://img.shields.io/badge/license-BSD-blue.svg)](https://github.com/webitproff/cot-excel_export/blob/main/LICENSE)
+
 ## Important to read
 
 1. To obtain exact table names when you do not currently have direct access to the database, you can use a similar tool called **"DB Structure Viewer"** for Cotonti CMF.  
@@ -15,7 +22,7 @@ The plugin uses the PhpSpreadsheet library to generate Excel files and works **w
    - it does not export to Excel.
 
    This tool **displays all tables and fields in the database** and can export data to SQL, CSV, JSON, and PHP (as small arrays), **with a preview of data in all fields of all database tables**.
-   **"DB Structure Viewer"** and **"Export to Excel"** are similar but serve different purposes.
+   **["DB Structure Viewer"](https://github.com/webitproff/cot-dbviewstructure)** and **["Export to Excel"](https://abuyfile.com/en/market/cotonti/plugs/excel-export)** are similar but serve different purposes.
 
 2. Separate plugins are available for data import. Visit the **[Cotonti CMF Extensions Marketplace](https://abuyfile.com/market)** or browse my projects on **[GitHub](https://github.com/webitproff)**.
 
